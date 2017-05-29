@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-
+import { Subscription } from 'rxjs/Subscription';
+import { CommonService } from './../commomservice.service'
 declare var ol: any;
 declare var proj4: any;
 
@@ -8,50 +9,71 @@ declare var proj4: any;
   templateUrl: './map.component.html',
   styleUrls: ['./map.component.css']
 })
+
+
 export class MapComponent implements OnInit {
-   	
-     
-     ol: any;
-   	ngOnInit(): void {
-    	
-      //proj4.defs('EPSG:31983', "+title=WGS 84 (long/lat) ++proj=utm +zone=23 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs");
-proj4.defs('EPSG:29193', "+proj=utm +zone=23 +south +ellps=aust_SA +units=m +no_defs ");
-          //console.log(proj4.);
-      //var zurich = ol.proj.transform([8.55, 47.366667], 'EPSG:900913', 'EPSG:31983');
+  ol: any;
+  map : any;
+  private subscription: Subscription;
+   constructor( private commonService: CommonService ){
+  }
+  /**
+   * 
+   * @returns void
+   */
+  ngOnInit(): void {
+    
+     this.subscription = this.commonService.notifyObservable$.subscribe((res) => {
+      if (res.hasOwnProperty('option') && res.option === 'onSubmit') {
+        
+         console.log("TTTTTT");
+         this.changeLayer();
+       // console.log(res.value);
+        // perform your other action from here
 
-      //console.log(zurich);
-      var map = new ol.Map({
-            controls: ol.control.defaults({
-    			attributionOptions: /** @type {olx.control.AttributionOptions} */ ({
-    				collapsible: false
-    			})
-            }),
-            layers: [
-    			 new ol.layer.Image({
-        source: new ol.source.ImageWMS({
-          ratio: 1,
-          url: 'http://bhmapogcbase.pbh.gov.br:80/bhmapogcbase/pbh_base/wms',
-          params: {'FORMAT': 'image/png',
-                   'VERSION': '1.1.1',  
-                LAYERS: 'pbh_base:BHBASE',
-                STYLES: '',
-          }
+      }
+    });
+    
+    proj4.defs('EPSG:29193', "+proj=utm +zone=23 +south +ellps=aust_SA +units=m +no_defs ");
+    this.map = new ol.Map({
+      controls: ol.control.defaults({
+        attributionOptions: /** @type {olx.control.AttributionOptions} */ ({
+          collapsible: false
         })
+      }).extend([
+        new ol.control.ZoomToExtent({
+          extent: [
+            813079.7791264898, 5929220.284081122,
+            848966.9639063801, 5936863.986909639
+          ]
         })
-          //new ol.layer.Tile({
-    			//	source: new ol.source.OSM()
-    		//	})
-            
-            
-            ],
-            target: 'map',
-            view: new ol.View({
-            	projection: 'EPSG:29193',
-    			center: ol.proj.transform([12.55, 47.366667], 'EPSG:900913', 'EPSG:29193'),
-    			zoom: 7
-            })
-    	});
+      ]),
+      layers: [
+        new ol.layer.Image({
+          source: new ol.source.ImageWMS({
+            ratio: 1,
+            url: 'http://bhmapogcbase.pbh.gov.br:80/bhmapogcbase/pbh_base/wms',
+            params: {
+              'FORMAT': 'image/png',
+              'VERSION': '1.1.1',
+              LAYERS: 'pbh_base:BHBASE',
+              STYLES: '',
+            }
+          })
+        })
+      ],
+      target: 'map',
+      view: new ol.View({
+        projection: 'EPSG:29193',
+        center: [624602.781965, 7856702.924181],
+        zoom: 9
+      })
+    });
+  }
 
-    }
+
+  changeLayer(){
+    console.log(this.map.getView().getProjection());
+  }
 }
 
